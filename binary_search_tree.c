@@ -5,7 +5,7 @@ struct node
     int data;
     struct node *left,*right,*parent;
     char color;
-};
+}*root=NULL;
 struct node* create_node(int data)
 {
     struct node *new_node;
@@ -24,6 +24,7 @@ struct node* right(struct node* main_focus)
     grand_parent=payrent->parent;
 
     main_focus->right=payrent;
+    main_focus->parent=payrent->parent;
     payrent->parent=main_focus;
 
     payrent->left = temp;
@@ -32,20 +33,26 @@ struct node* right(struct node* main_focus)
 
     if(grand_parent!=NULL)
     {
-        grand_parent->right=main_focus;
-        main_focus->parent=grand_parent;
+        if(grand_parent->left==payrent)
+        grand_parent->left=main_focus;
+        else if(grand_parent->right==payrent)
+            grand_parent->right = main_focus;
+        //main_focus->parent=grand_parent;
     }
     return main_focus;
 }
 struct node* left(struct node* main_focus)
 {
+    //printf("main focus %d",main_focus->data);
     struct node * temp,*payrent,*grand_parent;
     temp = main_focus->left;
     payrent = main_focus->parent;
     grand_parent=payrent->parent;
 
     main_focus->left=payrent;
+    main_focus->parent=payrent->parent ;
     payrent->parent=main_focus;
+
 
     payrent->right = temp;
     if(temp!=NULL)
@@ -53,8 +60,11 @@ struct node* left(struct node* main_focus)
 
     if(grand_parent!=NULL)
     {
+        if(grand_parent->left==payrent)
         grand_parent->left=main_focus;
-        main_focus->parent = grand_parent;
+        else if(grand_parent->right==payrent)
+            grand_parent->right = main_focus;
+   //     main_focus->parent = grand_parent;
     }
     return main_focus;
 }
@@ -92,6 +102,10 @@ void insertion_red_black(struct node* new_node)
                      c=temp->color;
                      temp->color = (temp->right)->color;
                      (temp->right)->color=c;
+                     if(temp->parent==NULL)
+                     {
+                        root=temp;
+                     }
                  }
                  else if(pay_rent->left == new_node && grand_parent->right==pay_rent)
                  {
@@ -103,6 +117,10 @@ void insertion_red_black(struct node* new_node)
                      c=temp->color;
                      temp->color=temp->left->color;
                      temp->left->color=c;
+                     if(temp->parent==NULL)
+                     {
+                        root=temp;
+                     }
                  }
                  else if(pay_rent->right == new_node && grand_parent->left==pay_rent)
                  {
@@ -114,16 +132,29 @@ void insertion_red_black(struct node* new_node)
                      c=temp->color;
                      temp->color=temp->right->color;
                      temp->right->color=c;
+                     if(temp->parent==NULL)
+                     {
+                      //   printf("in if\n");
+                        root=temp;
+                     }
                  }
                  else if(pay_rent->right == new_node && grand_parent->right==pay_rent)
                  {
+                     printf("inside right right - left roation case for %d\n",new_node->data);
+                    // getc(stdin);
                      //left rotation
                      struct node* temp;
                      temp = left(new_node->parent);
+                     //printf("\ncame_back %d %s\n",temp->data,temp->parent);
                      char c;
                      c=temp->color;
                      temp->color = (temp->left)->color;
                      (temp->left)->color=c;
+                     if(temp->parent==NULL)
+                     {
+                        // printf("in if\n");
+                        root=temp;
+                     }
                  }
             }
             //else if siblig is black or no sibling then rotate and reorder
@@ -144,7 +175,7 @@ void insertion_red_black(struct node* new_node)
     }
 };
 //adding node to the binary search tree
-struct node* add_bst(struct node *root,struct node * new_node)
+void add_bst(struct node * new_node)
 {
   struct node* temp=root;
   if(root==NULL)
@@ -186,19 +217,18 @@ struct node* add_bst(struct node *root,struct node * new_node)
             }
       }
   }
-  return root;
 }
 void inorder_traversal(struct node* itr)
 {
     if(itr==NULL)
         return ;
     inorder_traversal(itr->left);
-    printf("%d ",itr->data);
+    printf("%d %c\n",itr->data,itr->color);
     inorder_traversal(itr->right);
 }
 int main()
 {
-    struct node *root=NULL;
+    //struct node *root=NULL;
     int data,choice;
     while(1)
     {
@@ -211,14 +241,14 @@ int main()
     scanf("%d",&data);
     struct node *new_node;
     new_node=create_node(data);
-    root = add_bst(root,new_node);
+   add_bst(new_node);
     }
     else if(choice==0)
     {
         break;
     }
     }
+    printf("(root) %d %c\n",root->data,root->color);
     inorder_traversal(root);
-    printf("%c",root->color);
     return 0;
 }
