@@ -1,0 +1,306 @@
+#include<stdio.h>
+#include<stdlib.h>
+struct node
+{
+    int data;
+    struct node *left,*right,*parent;
+    char color;
+}*root=NULL;
+struct node* create_node(int data)
+{
+    struct node *new_node;
+    new_node = (struct node*)malloc(sizeof(struct node));
+    new_node->data=data;
+    new_node->left = NULL;
+    new_node->right = NULL;
+    new_node->parent=NULL;
+    return new_node;
+}
+struct node* right(struct node* main_focus)
+{
+    struct node * temp,*payrent,*grand_parent;
+    temp = main_focus->right;
+    payrent = main_focus->parent;
+    grand_parent=payrent->parent;
+
+    main_focus->right=payrent;
+    main_focus->parent=payrent->parent;
+    payrent->parent=main_focus;
+
+    payrent->left = temp;
+    if(temp!=NULL)
+        temp->parent=payrent;
+
+    if(grand_parent!=NULL)
+    {
+        if(grand_parent->left==payrent)
+        grand_parent->left=main_focus;
+        else if(grand_parent->right==payrent)
+            grand_parent->right = main_focus;
+        //main_focus->parent=grand_parent;
+    }
+    return main_focus;
+}
+struct node* left(struct node* main_focus)
+{
+    //printf("main focus %d",main_focus->data);
+    struct node * temp,*payrent,*grand_parent;
+    temp = main_focus->left;
+    payrent = main_focus->parent;
+    grand_parent=payrent->parent;
+
+    main_focus->left=payrent;
+    main_focus->parent=payrent->parent ;
+    payrent->parent=main_focus;
+
+
+    payrent->right = temp;
+    if(temp!=NULL)
+        temp->parent = payrent;
+
+    if(grand_parent!=NULL)
+    {
+        if(grand_parent->left==payrent)
+        grand_parent->left=main_focus;
+        else if(grand_parent->right==payrent)
+            grand_parent->right = main_focus;
+   //     main_focus->parent = grand_parent;
+    }
+    return main_focus;
+}
+void insertion_red_black(struct node* new_node)
+{
+    if(new_node->parent == NULL)
+    {
+        new_node->color ='B';
+    }
+    else
+    {
+        new_node->color = 'R';
+        if((new_node->parent)->color == 'B')
+            return ;
+        else
+        {
+            struct node *grand_parent,*pay_rent,*sibling;
+            pay_rent =new_node->parent;
+            grand_parent = pay_rent->parent;
+            //finding sibling
+            if(pay_rent==grand_parent->left)
+                sibling = grand_parent->right;
+            else if(pay_rent == grand_parent->right)
+                sibling = grand_parent->left;//sibling found
+
+            //if parent sibling is red then reorder and check
+            if(sibling == NULL || sibling->color == 'B')
+            {
+                 if(pay_rent->left == new_node && grand_parent->left==pay_rent)
+                 {
+                     //right rotation on child
+                     struct node* temp;
+                     temp = right(new_node->parent);
+                     char c;
+                     c=temp->color;
+                     temp->color = (temp->right)->color;
+                     (temp->right)->color=c;
+                     if(temp->parent==NULL)
+                     {
+                        root=temp;
+                     }
+                 }
+                 else if(pay_rent->left == new_node && grand_parent->right==pay_rent)
+                 {
+                     //right rotation followed by left rotation
+                     struct node *temp;
+                     temp=right(new_node);
+                     temp=left(temp);
+                     char c ;
+                     c=temp->color;
+                     temp->color=temp->left->color;
+                     temp->left->color=c;
+                     if(temp->parent==NULL)
+                     {
+                        root=temp;
+                     }
+                 }
+                 else if(pay_rent->right == new_node && grand_parent->left==pay_rent)
+                 {
+                     //left rotation followed by right rotation
+                     struct node* temp ;
+                     temp = left(new_node);
+                     temp = right(temp);
+                     char c;
+                     c=temp->color;
+                     temp->color=temp->right->color;
+                     temp->right->color=c;
+                     if(temp->parent==NULL)
+                     {
+                      //   printf("in if\n");
+                        root=temp;
+                     }
+                 }
+                 else if(pay_rent->right == new_node && grand_parent->right==pay_rent)
+                 {
+                    // printf("inside right right - left roation case for %d\n",new_node->data);
+                    // getc(stdin);
+                     //left rotation
+                     struct node* temp;
+                     temp = left(new_node->parent);
+                     //printf("\ncame_back %d %s\n",temp->data,temp->parent);
+                     char c;
+                     c=temp->color;
+                     temp->color = (temp->left)->color;
+                     (temp->left)->color=c;
+                     if(temp->parent==NULL)
+                     {
+                        // printf("in if\n");
+                        root=temp;
+                     }
+                 }
+            }
+            //else if siblig is black or no sibling then rotate and reorder
+            else if(sibling -> color == 'R')
+            {
+               //RECOLORING
+               pay_rent->color = 'B';
+               sibling->color = 'B';
+               if(grand_parent->parent != NULL)
+               {
+                   grand_parent->color ='R' ;
+                   insertion_red_black(grand_parent);
+               }
+               else
+                return ;
+            }
+        }
+    }
+}
+//adding node to the binary search tree
+void add_bst(struct node * new_node)
+{
+  struct node* temp=root;
+  if(root==NULL)
+  {
+      root = new_node;
+      insertion_red_black(root);
+  }
+  else
+  {
+      while(1)
+      {
+          if((temp->data) >= (new_node->data))
+            {
+              if(temp->left!=NULL)
+                temp=temp->left;
+              else
+              {
+                new_node->parent=temp;
+                new_node->color='R';
+                temp->left=new_node;
+                //insertion in binary search tree
+                insertion_red_black(new_node);
+                break;
+              }
+            }
+            else
+            {
+                if(temp->right!=NULL)
+                    temp=temp->right;
+                else
+                {
+                    new_node->parent=temp;
+                    new_node->color='R';
+                    temp->right=new_node;
+                    //insertion in binary search tree
+                    insertion_red_black(new_node);
+                   break;
+                }
+            }
+      }
+  }
+}
+void inorder_traversal(struct node* itr)
+{
+    if(itr==NULL)
+        return ;
+    inorder_traversal(itr->left);
+    printf("%d %c\n",itr->data,itr->color);
+    inorder_traversal(itr->right);
+}
+struct node* search_del(int element)
+{
+    struct node *temp;
+    temp=root;
+    while(temp->data != element )
+    {
+        if(temp->data >= element)
+        {
+            temp=temp->left;
+        }
+        else
+            temp=temp->right;
+       if(temp==NULL)
+                break;
+    }
+    return temp;
+}
+void fun_succ(struct node* del_addr)
+{
+    
+    
+}
+int main()
+{
+    //struct node *root=NULL;
+    int data,choice;
+    /*while(1)
+    {
+    printf("Press 1 to add element and 0 to exit \n");
+
+    scanf("%d",&choice);
+    if(choice == 1)
+    {
+        printf("Enter the data \n");
+    scanf("%d",&data);
+    struct node *new_node;
+    new_node=create_node(data);
+   add_bst(new_node);
+    }
+    else if(choice==0)
+    {
+        break;
+    }
+    }*/
+    add_bst(create_node(10));
+    add_bst(create_node(-10));
+    add_bst(create_node(20));
+    add_bst(create_node(-7));
+    add_bst(create_node(15));
+    add_bst(create_node(17));
+    //add_bst(create_node(14));
+    //add_bst(create_node(15));
+    //add_bst(create_node(35));
+    //add_bst(create_node(41));
+
+
+//deleting nodes 
+    printf("(root) %d %c\n",root->data,root->color);
+    inorder_traversal(root);
+    printf("Enter the element to delete \n");
+    int del;
+    scanf("%d",&del);
+    struct node * del_addr;
+    del_addr = search_del(del);
+    if(del_addr!=NULL)
+    {
+        printf("found %d \n",del_addr->data);
+    }
+    else
+    {
+        printf("not found\n");
+    }
+    //finding inorder succesor 
+    struct node * in_succ;
+    in_succ = fun_succ(del_addr);
+    
+    return 0;
+}
